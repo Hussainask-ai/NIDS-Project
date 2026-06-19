@@ -51,6 +51,35 @@ NIDS_Project/
 ├── logs/         # Log files
 └── Makefile
 
+## Web Dashboard (Monitoring Interface)
+
+A web-based monitoring dashboard is included for visualizing alerts, managing 
+rules, and managing the blacklist through a browser interface.
+
+### Architecture
+The C++ NIDS engine handles all packet capture, detection logic, and OOP 
+implementation. The web dashboard is a separate Flask-based monitoring layer 
+that reads the alert logs and rule files produced by the C++ program — 
+similar to how production tools separate detection engines (Suricata, Snort) 
+from visualization layers (Kibana).
+
+### Running the Web Dashboard
+
+Terminal 1 — run the NIDS engine:
+```bash
+sudo ./nids
+```
+
+Terminal 2 — run the web dashboard:
+```bash
+cd web
+python3 server.py
+```
+
+Open your browser to: http://localhost:5000
+
+The dashboard auto-refreshes every 10 seconds to show new alerts.
+
 ## Developers
 - Hussain Askari, Aayan Asim and Abdul Rehman Ayaaz
 - Air University Karachi — BS Cybersecurity
