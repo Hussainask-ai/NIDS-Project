@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIDS Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0e1a;
+            color: #e0e6f0;
+            min-height: 100vh;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: #0d1224;
+            border-bottom: 1px solid #1e2d4a;
+            padding: 0 30px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #4fc3f7;
+            letter-spacing: 1px;
+        }
+        .navbar-brand .dot {
+            width: 10px;
+            height: 10px;
+            background: #00e676;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,230,118,0.4); }
+            50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(0,230,118,0); }
+        }
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+        .nav-btn {
+            background: none;
+            border: 1px solid #1e2d4a;
+            color: #a0b0c8;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover, .nav-btn.active {
+            background: #1e2d4a;
+            color: #4fc3f7;
+            border-color: #4fc3f7;
+        }
+
+        /* MAIN LAYOUT */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 30px;
+        }
+
+        /* PAGES */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* STAT CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #0d1224;
+            border: 1px solid #1e2d4a;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #6b7a99;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-card.total .value { color: #4fc3f7; }
+        .stat-card.critical .value { color: #ff5252; }
+        .stat-card.high .value { color: #ff9800; }
+        .stat-card.medium .value { color: #ffeb3b; }
+        .stat-card.low .value { color: #00e676; }
+
+        /* SECTION HEADER */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e0e6f0;
+        }
+
+        /* CAPTURE PANEL */
+        .capture-panel {
+            background: #0d1224;
+            border: 1px solid #1e2d4a;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .capture-panel h3 {
+            color: #4fc3f7;
+            margin-bottom: 16px;
+            font-size: 15px;
+        }
+        .capture-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 12px;
+            color: #6b7a99;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group input, .form-group select {
+            background: #0a0e1a;
+            border: 1px solid #1e2d4a;
+            color: #e0e6f0;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #4fc3f7;
+        }
+        .form-group select option {
+            background: #0d1224;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #4fc3f7;
+            color: #0a0e1a;
+        }
+        .btn-primary:hover { background: #29b6f6; }
+        .btn-danger {
+            background: #ff5252;
+            color: white;
+        }
+        .btn-danger:hover { background: #ff1744; }
+        .btn-success {
+            background: #00e676;
+            color: #0a0e1a;
+        }
+        .btn-success:hover { background: #00c853; }
+        .btn-warning {
+            background: #ff9800;
+            color: #0a0e1a;
+        }
+        .btn-warning:hover { background: #f57c00; }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* ALERTS TABLE */
+        .table-container {
+            background: #0d1224;
+            border: 1px solid #1e2d4a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .filter-bar {
+            padding: 16px;
+            border-bottom: 1px solid #1e2d4a;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid #1e2d4a;
+            background: none;
+            color: #a0b0c8;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: #4fc3f7; color: #4fc3f7; }
+        .filter-btn.active { background: #4fc3f7; color: #0a0e1a; border-color: #4fc3f7; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        thead th {
+            background: #111827;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b7a99;
+            border-bottom: 1px solid #1e2d4a;
+        }
+        tbody tr {
+            border-bottom: 1px solid #111827;
+            transition: background 0.15s;
+        }
+        tbody tr:hover { background: #111827; }
+        tbody td {
+            padding: 12px 16px;
+            color: #c0cce0;
+        }
+
+        /* SEVERITY BADGES */
+        .badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .badge-critical { background: rgba(255,82,82,0.15); color: #ff5252; border: 1px solid rgba(255,82,82,0.3); }
+        .badge-high { background: rgba(255,152,0,0.15); color: #ff9800; border: 1px solid rgba(255,152,0,0.3); }
+        .badge-medium { background: rgba(255,235,59,0.15); color: #ffeb3b; border: 1px solid rgba(255,235,59,0.3); }
+        .badge-low { background: rgba(0,230,118,0.15); color: #00e676; border: 1px solid rgba(0,230,118,0.3); }
+
+        /* RULES & BLACKLIST */
+        .card {
+            background: #0d1224;
+            border: 1px solid #1e2d4a;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card h3 {
+            color: #4fc3f7;
+            margin-bottom: 16px;
+            font-size: 15px;
+        }
+        .add-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .add-form .form-group input,
+        .add-form .form-group select {
+            width: 100%;
+        }
+
+        /* STATUS BAR */
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0d1224;
+            border-top: 1px solid #1e2d4a;
+            padding: 8px 30px;
+            display: flex;
+            gap: 24px;
+            font-size: 12px;
+            color: #6b7a99;
+        }
+        .status-item { display: flex; align-items: center; gap: 6px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .status-dot.green { background: #00e676; }
+        .status-dot.red { background: #ff5252; }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background: #00e676; color: #0a0e1a; }
+        .toast.error { background: #ff5252; color: white; }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7a99;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        /* SEARCH */
+        .search-input {
+            background: #0a0e1a;
+            border: 1px solid #1e2d4a;
+            color: #e0e6f0;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            width: 220px;
+        }
+        .search-input:focus { border-color: #4fc3f7; }
+
+        .refresh-btn {
+            background: none;
+            border: 1px solid #1e2d4a;
+            color: #6b7a99;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .refresh-btn:hover { border-color: #4fc3f7; color: #4fc3f7; }
+
+        /* CAPTURE STATUS */
+        .capture-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .capture-status.running {
+            background: rgba(0,230,118,0.1);
+            color: #00e676;
+            border: 1px solid rgba(0,230,118,0.3);
+        }
+        .capture-status.stopped {
+            background: rgba(107,122,153,0.1);
+            color: #6b7a99;
+            border: 1px solid rgba(107,122,153,0.3);
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0e1a; }
+        ::-webkit-scrollbar-thumb { background: #1e2d4a; border-radius: 3px; }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .nav-links { display: none; }
+        }
+
+        .pb-20 { padding-bottom: 40px; }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="dot"></div>
+        NIDS — Network Intrusion Detection System
+    </div>
+    <div class="nav-links">
+        <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+        <button class="nav-btn" onclick="showPage('capture')">Capture</button>
+        <button class="nav-btn" onclick="showPage('alerts')">Alerts</button>
+        <button class="nav-btn" onclick="showPage('rules')">Rules</button>
+        <button class="nav-btn" onclick="showPage('blacklist')">Blacklist</button>
+        <button class="nav-btn" onclick="showPage('about')">About</button>
+    </div>
+</nav>
+
+<!-- MAIN CONTAINER -->
+<div class="container pb-20">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+        <div class="section-header" style="margin-bottom:20px;margin-top:8px">
+            <div>
+                <div class="section-title" style="font-size:20px">Security Dashboard</div>
+                <div style="color:#6b7a99;font-size:13px;margin-top:4px">Real-time network intrusion monitoring</div>
+            </div>
+            <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="value" id="stat-total">0</div>
+                <div class="label">Total Alerts</div>
+            </div>
+            <div class="stat-card critical">
+                <div class="value" id="stat-critical">0</div>
+                <div class="label">Critical</div>
+            </div>
+            <div class="stat-card high">
+                <div class="value" id="stat-high">0</div>
+                <div class="label">High</div>
+            </div>
+            <div class="stat-card medium">
+                <div class="value" id="stat-medium">0</div>
+                <div class="label">Medium</div>
+            </div>
+            <div class="stat-card low">
+                <div class="value" id="stat-low">0</div>
+                <div class="label">Low</div>
+            </div>
+        </div>
+
+        <!-- RECENT ALERTS -->
+        <div class="section-header">
+            <div class="section-title">Recent Alerts</div>
+            <button class="btn btn-primary btn-sm" onclick="showPage('alerts')">View All</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Severity</th>
+                        <th>Protocol</th>
+                        <th>Source IP</th>
+                        <th>Destination IP</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-alerts-body">
+                    <tr><td colspan="7"><div class="empty-state"><div class="icon">🔍</div><p>No alerts yet. Start a capture to begin monitoring.</p></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CAPTURE PAGE -->
+    <div class="page" id="page-capture">
+        <div class="section-header" style="margin-bottom:20px;margin-top:8px">
+            <div class="section-title" style="font-size:20px">Packet Capture</div>
+            <div id="capture-status-badge" class="capture-status stopped">● Stopped</div>
+        </div>
+
+        <div class="capture-panel">
+            <h3>Start Live Capture</h3>
+            <div class="capture-form">
+                <div class="form-group">
+                    <label>Network Interface</label>
+                    <input type="text" id="cap-iface" value="wlp2s0" placeholder="e.g. wlp2s0">
+                </div>
+                <div class="form-group">
+                    <label>Packet Count (0 = unlimited)</label>
+                    <input type="number" id="cap-count" value="100" min="0">
+                </div>
+                <button class="btn btn-success" onclick="startCapture()">▶ Start Capture</button>
+                <button class="btn btn-danger" onclick="stopCapture()">■ Stop Capture</button>
+            </div>
+        </div>
+
+        <div class="capture-panel">
+            <h3>Analyze PCAP File</h3>
+            <div class="capture-form">
+                <div class="form-group">
+                    <label>PCAP File Path</label>
+                    <input type="text" id="pcap-path" placeholder="/path/to/file.pcap" style="width:300px">
+                </div>
+                <button class="btn btn-primary" onclick="analyzePcap()">Analyze File</button>
+            </div>
+        </div>
+
+        <div class="capture-panel">
+            <h3>Alert Log</h3>
+            <div style="display:flex;gap:12px;margin-bottom:12px">
+                <button class="btn btn-warning btn-sm" onclick="loadAll()">↻ Refresh Alerts</button>
+                <button class="btn btn-danger btn-sm" onclick="clearAlerts()">🗑 Clear Alerts</button>
+            </div>
+            <div id="capture-log" style="background:#0a0e1a;border:1px solid #1e2d4a;border-radius:6px;padding:16px;font-family:monospace;font-size:12px;color:#00e676;height:200px;overflow-y:auto;">
+                Waiting for capture to start...
+            </div>
+        </div>
+    </div>
+
+    <!-- ALERTS PAGE -->
+    <div class="page" id="page-alerts">
+        <div class="section-header" style="margin-bottom:20px;margin-top:8px">
+            <div class="section-title" style="font-size:20px">All Alerts</div>
+            <div style="display:flex;gap:8px">
+                <input type="text" class="search-input" id="alert-search" placeholder="Search alerts..." oninput="filterAlerts()">
+                <button class="refresh-btn" onclick="loadAll()">↻</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="setSeverityFilter('ALL', this)">All</button>
+                <button class="filter-btn" onclick="setSeverityFilter('CRITICAL', this)">🔴 Critical</button>
+                <button class="filter-btn" onclick="setSeverityFilter('HIGH', this)">🟠 High</button>
+                <button class="filter-btn" onclick="setSeverityFilter('MEDIUM', this)">🟡 Medium</button>
+                <button class="filter-btn" onclick="setSeverityFilter('LOW', this)">🟢 Low</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Severity</th>
+                        <th>Protocol</th>
+                        <th>Source IP</th>
+                        <th>Destination IP</th>
+                        <th>Description</th>
+                        <th>Rule ID</th>
+                    </tr>
+                </thead>
+                <tbody id="alerts-body">
+                    <tr><td colspan="8"><div class="empty-state"><div class="icon">🔍</div><p>No alerts found.</p></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RULES PAGE -->
+    <div class="page" id="page-rules">
+        <div class="section-header" style="margin-bottom:20px;margin-top:8px">
+            <div class="section-title" style="font-size:20px">Rule Manager</div>
+            <button class="refresh-btn" onclick="loadRules()">↻ Refresh</button>
+        </div>
+
+        <div class="card">
+            <h3>Add New Rule</h3>
+            <div class="add-form">
+                <div class="form-group">
+                    <label>Rule ID</label>
+                    <input type="number" id="rule-id" placeholder="11">
+                </div>
+                <div class="form-group">
+                    <label>Protocol</label>
+                    <select id="rule-proto">
+                        <option>TCP</option>
+                        <option>UDP</option>
+                        <option>ICMP</option>
+                        <option>ANY</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Source IP</label>
+                    <input type="text" id="rule-src" value="ANY">
+                </div>
+                <div class="form-group">
+                    <label>Dest IP</label>
+                    <input type="text" id="rule-dst" value="ANY">
+                </div>
+                <div class="form-group">
+                    <label>Dest Port</label>
+                    <input type="number" id="rule-port" placeholder="8080" min="0" max="65535">
+                </div>
+                <div class="form-group">
+                    <label>Action</label>
+                    <input type="text" id="rule-action" value="ALERT">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="rule-desc" placeholder="Custom rule">
+                </div>
+                <div class="form-group">
+                    <label>Severity</label>
+                    <select id="rule-severity">
+                        <option>LOW</option>
+                        <option>MEDIUM</option>
+                        <option>HIGH</option>
+                        <option>CRITICAL</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-success" onclick="addRule()">+ Add Rule</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Protocol</th>
+                        <th>Source IP</th>
+                        <th>Dest IP</th>
+                        <th>Port</th>
+                        <th>Severity</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="rules-body">
+                    <tr><td colspan="8"><div class="empty-state"><p>Loading rules...</p></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- BLACKLIST PAGE -->
+    <div class="page" id="page-blacklist">
+        <div class="section-header" style="margin-bottom:20px;margin-top:8px">
+            <div class="section-title" style="font-size:20px">Blacklist Manager</div>
+            <button class="refresh-btn" onclick="loadBlacklist()">↻ Refresh</button>
+        </div>
+
+        <div class="card">
+            <h3>Add IP to Blacklist</h3>
+            <div class="capture-form">
+                <div class="form-group">
+                    <label>IP Address</label>
+                    <input type="text" id="blacklist-ip" placeholder="192.168.1.100">
+                </div>
+                <button class="btn btn-danger" onclick="addBlacklist()">+ Add to Blacklist</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="blacklist-body">
+                    <tr><td colspan="2"><div class="empty-state"><p>No blacklisted IPs.</p></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ABOUT PAGE -->
+    <div class="page" id="page-about">
+        <div style="margin-top:8px;max-width:700px">
+            <div class="section-title" style="font-size:20px;margin-bottom:20px">About NIDS</div>
+            <div class="card">
+                <h3>Network Intrusion Detection System v1.0</h3>
+                <div style="margin-top:16px;line-height:1.8;color:#a0b0c8;font-size:14px">
+                    <p style="margin-bottom:12px">A fully functional Network Intrusion Detection System built from scratch in C++17 using libpcap for real-time packet capture and analysis.</p>
+                    <p style="margin-bottom:12px">The system captures live network packets, analyzes them against a custom rule engine, and generates severity-based alerts for suspicious activity including port scans, ping floods, and known attack signatures.</p>
+                    <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                        <div>
+                            <div style="color:#4fc3f7;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Technology</div>
+                            <div style="font-size:13px;color:#6b7a99;line-height:2">
+                                C++17<br>libpcap<br>Flask (Web UI)<br>Linux Ubuntu
+                            </div>
+                        </div>
+                        <div>
+                            <div style="color:#4fc3f7;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Detection</div>
+                            <div style="font-size:13px;color:#6b7a99;line-height:2">
+                                Rule-based detection<br>Port scan detection<br>Ping flood detection<br>Custom rules support
+                            </div>
+                        </div>
+                        <div>
+                            <div style="color:#4fc3f7;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Developers</div>
+                            <div style="font-size:13px;color:#6b7a99;line-height:2">
+                                Hussain<br>BS Cybersecurity<br>Air University Karachi<br>OOP Final Project 2026
+                            </div>
+                        </div>
+                        <div>
+                            <div style="color:#4fc3f7;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">OOP Concepts</div>
+                            <div style="font-size:13px;color:#6b7a99;line-height:2">
+                                Encapsulation<br>Inheritance<br>Polymorphism<br>Abstraction
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:20px">
+                        <a href="https://github.com/Hussainask-ai/NIDS-Project" target="_blank" style="color:#4fc3f7;font-size:13px">GitHub Repository →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+    <div class="status-item">
+        <div class="status-dot green"></div>
+        NIDS Web Dashboard v1.0
+    </div>
+    <div class="status-item" id="status-alerts">Alerts: 0</div>
+    <div class="status-item" id="status-rules">Rules: 0</div>
+    <div class="status-item" id="status-time"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+    let allAlerts = [];
+    let currentSeverityFilter = 'ALL';
+    let captureRunning = false;
+    let captureProcess = null;
+
+    // PAGE NAVIGATION
+    function showPage(name) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + name).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => {
+            if (b.textContent.toLowerCase().includes(name)) b.classList.add('active');
+        });
+        if (name === 'rules') loadRules();
+        if (name === 'blacklist') loadBlacklist();
+        if (name === 'alerts') renderAlerts(allAlerts);
+    }
+
+    // TOAST
+    function showToast(msg, type='success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast ' + type;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // SEVERITY BADGE
+    function badge(severity) {
+        const s = (severity || '').toUpperCase();
+        return `<span class="badge badge-${s.toLowerCase()}">${s}</span>`;
+    }
+
+    // LOAD STATS
+    async function loadStats() {
+        try {
+            const r = await fetch('/api/stats');
+            const stats = await r.json();
+            document.getElementById('stat-total').textContent = stats.total;
+            document.getElementById('stat-critical').textContent = stats.critical;
+            document.getElementById('stat-high').textContent = stats.high;
+            document.getElementById('stat-medium').textContent = stats.medium;
+            document.getElementById('stat-low').textContent = stats.low;
+            document.getElementById('status-alerts').textContent = `Alerts: ${stats.total}`;
+        } catch(e) {}
+    }
+
+    // LOAD ALERTS
+    async function loadAlerts() {
+        try {
+            const r = await fetch('/api/alerts');
+            allAlerts = await r.json();
+            renderRecentAlerts(allAlerts.slice(-10).reverse());
+            renderAlerts(allAlerts);
+        } catch(e) {}
+    }
+
+    function renderRecentAlerts(alerts) {
+        const tbody = document.getElementById('recent-alerts-body');
+        if (!alerts.length) {
+            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">🔍</div><p>No alerts yet. Start a capture to begin monitoring.</p></div></td></tr>';
+            return;
+        }
+        tbody.innerHTML = alerts.map(a => `
+            <tr>
+                <td>${a.id || '-'}</td>
+                <td>${a.timestamp || '-'}</td>
+                <td>${badge(a.severity)}</td>
+                <td>${a.protocol || '-'}</td>
+                <td>${a.source_ip || '-'}</td>
+                <td>${a.dest_ip || '-'}</td>
+                <td>${a.description || '-'}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderAlerts(alerts) {
+        const search = (document.getElementById('alert-search')?.value || '').toLowerCase();
+        let filtered = alerts;
+        if (currentSeverityFilter !== 'ALL') {
+            filtered = filtered.filter(a => (a.severity||'').toUpperCase() === currentSeverityFilter);
+        }
+        if (search) {
+            filtered = filtered.filter(a =>
+                JSON.stringify(a).toLowerCase().includes(search)
+            );
+        }
+        const tbody = document.getElementById('alerts-body');
+        if (!filtered.length) {
+            tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">🔍</div><p>No alerts found.</p></div></td></tr>';
+            return;
+        }
+        tbody.innerHTML = [...filtered].reverse().map(a => `
+            <tr>
+                <td>${a.id || '-'}</td>
+                <td>${a.timestamp || '-'}</td>
+                <td>${badge(a.severity)}</td>
+                <td>${a.protocol || '-'}</td>
+                <td>${a.source_ip || '-'}</td>
+                <td>${a.dest_ip || '-'}</td>
+                <td>${a.description || '-'}</td>
+                <td>${a.rule_id || '-'}</td>
+            </tr>
+        `).join('');
+    }
+
+    function setSeverityFilter(severity, btn) {
+        currentSeverityFilter = severity;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderAlerts(allAlerts);
+    }
+
+    function filterAlerts() { renderAlerts(allAlerts); }
+
+    // LOAD RULES
+    async function loadRules() {
+        try {
+            const r = await fetch('/api/rules');
+            const rules = await r.json();
+            document.getElementById('status-rules').textContent = `Rules: ${rules.length}`;
+            const tbody = document.getElementById('rules-body');
+            if (!rules.length) {
+                tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><p>No rules found.</p></div></td></tr>';
+                return;
+            }
+            tbody.innerHTML = rules.map(r => `
+                <tr>
+                    <td>${r.id}</td>
+                    <td>${r.protocol}</td>
+                    <td>${r.src_ip}</td>
+                    <td>${r.dest_ip}</td>
+                    <td>${r.dest_port}</td>
+                    <td>${badge(r.severity)}</td>
+                    <td>${r.description}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="removeRule(${r.id})">Remove</button></td>
+                </tr>
+            `).join('');
+        } catch(e) {}
+    }
+
+    async function addRule() {
+        const id = document.getElementById('rule-id').value;
+        const proto = document.getElementById('rule-proto').value;
+        const src = document.getElementById('rule-src').value;
+        const dst = document.getElementById('rule-dst').value;
+        const port = document.getElementById('rule-port').value;
+        const action = document.getElementById('rule-action').value;
+        const desc = document.getElementById('rule-desc').value;
+        const severity = document.getElementById('rule-severity').value;
+
+        if (!id || !port || !desc) {
+            showToast('Please fill all fields', 'error');
+            return;
+        }
+
+        const r = await fetch('/api/rules/add', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id, protocol: proto, src_ip: src, dest_ip: dst, dest_port: port, action, description: desc, severity})
+        });
+        const data = await r.json();
+        if (data.success) {
+            showToast('Rule added successfully!');
+            loadRules();
+        } else {
+            showToast(data.error || 'Error adding rule', 'error');
+        }
+    }
+
+    async function removeRule(id) {
+        const r = await fetch('/api/rules/remove', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id})
+        });
+        const data = await r.json();
+        if (data.success) {
+            showToast('Rule removed!');
+            loadRules();
+        }
+    }
+
+    // BLACKLIST
+    async function loadBlacklist() {
+        try {
+            const r = await fetch('/api/blacklist');
+            const ips = await r.json();
+            const tbody = document.getElementById('blacklist-body');
+            if (!ips.length) {
+                tbody.innerHTML = '<tr><td colspan="2"><div class="empty-state"><p>No blacklisted IPs.</p></div></td></tr>';
+                return;
+            }
+            tbody.innerHTML = ips.map(ip => `
+                <tr>
+                    <td>${ip}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="removeBlacklist('${ip}')">Remove</button></td>
+                </tr>
+            `).join('');
+        } catch(e) {}
+    }
+
+    async function addBlacklist() {
+        const ip = document.getElementById('blacklist-ip').value.trim();
+        if (!ip) { showToast('Enter an IP address', 'error'); return; }
+        const r = await fetch('/api/blacklist/add', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ip})
+        });
+        const data = await r.json();
+        if (data.success) {
+            showToast('IP blacklisted!');
+            document.getElementById('blacklist-ip').value = '';
+            loadBlacklist();
+        } else {
+            showToast(data.error || 'Error', 'error');
+        }
+    }
+
+    async function removeBlacklist(ip) {
+        const r = await fetch('/api/blacklist/remove', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ip})
+        });
+        const data = await r.json();
+        if (data.success) { showToast('IP removed from blacklist!'); loadBlacklist(); }
+    }
+
+    // CAPTURE
+    async function startCapture() {
+    document.getElementById('capture-status-badge').className = 'capture-status stopped';
+    document.getElementById('capture-status-badge').textContent = '● Run NIDS in terminal';
+    document.getElementById('capture-log').innerHTML = `<span style="color:#4fc3f7">[i] To start capturing, run this in a terminal:</span>\n<span style="color:#00e676">sudo ./nids</span>\n<span style="color:#6b7a99">Then select option [1] from the console menu.</span>\n<span style="color:#6b7a99">This dashboard will auto-update with new alerts every 10 seconds.</span>`;
+    showToast('Run sudo ./nids in a terminal to start capturing');
+}
+
+    async function stopCapture() {
+        document.getElementById('capture-log').innerHTML += '\n<span style="color:#ff9800">[i] Press Ctrl+C in the NIDS terminal to stop capturing.</span>';
+        showToast('Press Ctrl+C in the NIDS terminal to stop');
+    }
+
+    async function analyzePcap() {
+        const path = document.getElementById('pcap-path').value.trim();
+        if (!path) { showToast('Enter a pcap file path', 'error'); return; }
+        showToast('Analyzing pcap file...');
+        document.getElementById('capture-log').innerHTML = `<span style="color:#4fc3f7">[+] Analyzing: ${path}</span>\n<span style="color:#6b7a99">Check alerts page for results.</span>`;
+    }
+
+    async function clearAlerts() {
+        const r = await fetch('/api/clear', {method: 'POST'});
+        const data = await r.json();
+        if (data.success) {
+            allAlerts = [];
+            showToast('Alerts cleared!');
+            loadAll();
+        }
+    }
+
+    // LOAD ALL
+    function loadAll() {
+        loadStats();
+        loadAlerts();
+    }
+
+    // CLOCK
+    function updateClock() {
+        document.getElementById('status-time').textContent = new Date().toLocaleTimeString();
+    }
+
+    // INIT
+    loadAll();
+    loadRules();
+    setInterval(loadAll, 10000);
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
+</body>
+</html>
